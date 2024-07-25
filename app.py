@@ -1,4 +1,4 @@
-_from fastapi import FastAPI, HTTPException,UploadFile,File
+from fastapi import FastAPI, HTTPException,UploadFile,File
 from pydantic import BaseModel
 import pandas as pd
 from io import StringIO,BytesIO
