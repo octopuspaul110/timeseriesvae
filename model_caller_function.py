@@ -129,7 +129,7 @@ def save_and_load_vae(vae_model, path="models", filename="vae_model2.pth"):
 
   # Load the model
   loaded_vae = VariationalAutoencoder(input_dim, latent_dim)  # Assuming these variables are defined in the previous context
-  loaded_vae.load_state_dict(torch.load(path + "/" + filename))
+  loaded_vae.load_state_dict(torch.load(filename))
   loaded_vae.eval()  # Set the model to evaluation mode
 
   return loaded_vae
