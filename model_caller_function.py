@@ -21,7 +21,7 @@ from tqdm import tqdm
 from tqdm import trange
 from sklearn.preprocessing import MinMaxScaler
 
-df = pd.read_csv("data\KITT.csv")
+df = pd.read_csv("KITT.csv")
 df['Date'] = pd.to_datetime(df.Date, format='%Y-%m-%d')
 
 df = df.set_index("Date")
