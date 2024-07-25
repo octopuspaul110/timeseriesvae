@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException,UploadFile,File
+_from fastapi import FastAPI, HTTPException,UploadFile,File
 from pydantic import BaseModel
 import pandas as pd
 from io import StringIO,BytesIO
@@ -48,5 +48,5 @@ async def generate_synthetic(num_of_samples : int,new_data : UploadFile = File(.
 async def get_tsne_plot():
     with open("tsne_plot.png", "rb") as f:
         return StreamingResponse(BytesIO(f.read()), media_type="image/png")
-if _name_ == '_main_':
+if _name_ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=8080)
