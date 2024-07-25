@@ -7,11 +7,18 @@ import torch
 from sklearn.preprocessing import MinMaxScaler
 import base64
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 # Assuming the existence of a function generate_and_detect and a VAE model
 # These need to be implemented according to your specific requirements
-
 app = FastAPI()
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins = ["*"],
+  allow_credentials=True,
+  allow_methods = ["*"],
+  allow_headers = ["*"]
+)
 seq_length = 10
 class GenerateRequest(BaseModel):
     num_samples: int
