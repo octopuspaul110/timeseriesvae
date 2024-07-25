@@ -12,6 +12,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.manifold import TSNE
 from statsmodels.graphics.tsaplots import plot_acf
 from sklearn.ensemble import IsolationForest
+import base64
+from io import BytesIO
 # import torchvision
 # import torchvision.transforms as transforms
 
@@ -155,13 +157,15 @@ def generate_and_detect(vae, new_data, seq_length, batch_size, threshold_percent
   """
 
   # Generate synthetic data (using the same number of samples as new_data)
-  num_samples = len(new_data)
+  #num_samples = len(new_data)
   vae.eval()
   with torch.no_grad():
-      z = torch.randn(num_samples, latent_dim)  # Adjust latent_dim if needed
+      z = torch.randn(batch_size, latent_dim)  # Adjust latent_dim if needed
       synthetic_data = vae.decoder(z).numpy()
 
+  #new_data = pd.read_csv(new_data)
   # Convert synthetic data to DataFrame
+  print(new_data.head())
   synthetic_df = pd.DataFrame(synthetic_data, columns=new_data.columns)
 
   # Prepare new data for anomaly detection
@@ -183,7 +187,7 @@ def generate_and_detect(vae, new_data, seq_length, batch_size, threshold_percent
 
   # Identify anomalies in the new dataset
   anomalies = np.where(reconstruction_errors > threshold)[0]
-
+  anomalies = anomalies.tolist()
   # --- t-SNE Plot ---
   # Combine real and synthetic data for t-SNE
   combined_data = np.concatenate((new_data.values, synthetic_data))
@@ -194,17 +198,24 @@ def generate_and_detect(vae, new_data, seq_length, batch_size, threshold_percent
 
   # Create t-SNE figure
   tsne_fig = plt.figure(figsize=(8, 6))
-  #plt.scatter(real_embeddings[:, 0], real_embeddings[:, 1], label='Real Data', alpha=0.7)
-  #plt.scatter(synthetic_embeddings[:, 0], synthetic_embeddings[:, 1], label='Synthetic Data', alpha=0.7)
-  #plt.title('t-SNE Visualization of Real and Synthetic Data')
-  #plt.xlabel('t-SNE Dimension 1')
-  #plt.ylabel('t-SNE Dimension 2')
-  #plt.legend()
+  plt.scatter(real_embeddings[:, 0], real_embeddings[:, 1], label='Real Data', alpha=0.7)
+  plt.scatter(synthetic_embeddings[:, 0], synthetic_embeddings[:, 1], label='Synthetic Data', alpha=0.7)
+  plt.title('t-SNE Visualization of Real and Synthetic Data')
+  plt.xlabel('t-SNE Dimension 1')
+  plt.ylabel('t-SNE Dimension 2')
+  plt.legend()
 
+  img_buffer = BytesIO()
+  plt.savefig(img_buffer, format='png')
+  img_buffer.seek(0)
+
+    # Convert image to base64 string
+  #img_base64 = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+  plt.close(tsne_fig)
   # --- Line Plot with Anomalies ---
   # Create line plot figure
   
-  line_fig = plt.figure(figsize=(15, 6))
+  #line_fig = plt.figure(figsize=(15, 6))
   #for i in range(new_data.shape[1]):
      # plt.plot(new_data.index, new_data.iloc[:, i], label=new_data.columns[i])
 
@@ -219,43 +230,17 @@ def generate_and_detect(vae, new_data, seq_length, batch_size, threshold_percent
   #plt.ylabel("Value")
   #plt.legend()
 
-  return synthetic_df,anomalies,#tsne_fig, line_fig
+  return synthetic_df,anomalies,img_buffer,#tsne_fig, line_fig
 
 # Example usage:
 # Assuming 'vae', 'new_df', 'seq_length', and 'latent_dim' are defined
-synthetic_df, tsne_fig, line_fig = generate_and_detect(vae, df, seq_length, batch_size=len(df))
 
-print("Synthetic Data:")
-print(synthetic_df.head())
+#synthetic_df, anomalies = generate_and_detect(vae, df, seq_length, batch_size=len(df))
+
+#print("Synthetic Data:")
+#print(synthetic_df.head())
+#print(anomalies)
 
 # Display the plots
 #tsne_fig.show()
 #line_fig.show()
-
-import pandas as pd
-
-from flask import Flask, request, jsonify
-import pandas as pd
-import torch
-
-app = Flask(__name__)
-@app.route('/generate', methods=['POST'])
-def generate_synthetic():
-  num_samples = int(request.form.get('num_samples'))  
-
-  new_data_json = request.form.get('new_data')
-  new_data = pd.read_json(new_data_json, orient='records')
-
-  synthetic_data,anomalies, = generate_and_detect(vae, new_data, seq_length, batch_size= num_samples,threshold_percentile=95) #detect_anomalies(vae, new_data, seq_length, batch_size=len(new_data))
-
-  response = {
-    'synthetic_data': synthetic_data.to_dict(orient='records'),
-    'anomalies': anomalies,
-  }
-  return jsonify(response)
-if __name__ == "__main__":
-    app.run(debug=True)  
-    #generate_and_detect(vae_model2, df, seq_length, 1000, threshold_percentile=95)
-
-
-
